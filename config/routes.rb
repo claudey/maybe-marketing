@@ -29,10 +29,6 @@ Rails.application.routes.draw do
   get "features/assistant/:category", to: "features#assistant", as: "assistant_category"
   get "features/assistant/:category/content", to: "features#assistant_content", as: "assistant_content"
 
-  get "pricing", to: "pages#pricing"
-  get "features/assistant/:category", to: "features#assistant", as: "assistant_category"
-  get "features/assistant/:category/content", to: "features#assistant_content", as: "assistant_content"
-
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   resources :signups, only: [ :new, :create ]
   resources :articles, only: [ :index, :show ]
