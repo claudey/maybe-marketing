@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_21_183301) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_17_104958) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,9 +38,44 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_21_183301) do
     t.index ["url_pattern"], name: "index_content_blocks_on_url_pattern"
   end
 
-  create_table "dictionaries", force: :cascade do |t|
+  create_table "faqs", force: :cascade do |t|
+    t.string "question"
+    t.text "answer"
+    t.string "slug"
+    t.string "category"
+    t.string "meta_image_url"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["category"], name: "index_faqs_on_category"
+    t.index ["slug"], name: "index_faqs_on_slug", unique: true
+  end
+
+  create_table "institutions", primary_key: "institution_id", id: :string, force: :cascade do |t|
+    t.string "name", null: false
+    t.string "country_codes", default: [], array: true
+    t.string "products", default: [], array: true
+    t.string "logo_url"
+    t.string "website"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "oauth"
+    t.string "primary_color"
+    t.index ["country_codes"], name: "index_institutions_on_country_codes", using: :gin
+    t.index ["name"], name: "index_institutions_on_name"
+    t.index ["products"], name: "index_institutions_on_products", using: :gin
+  end
+
+  create_table "redirects", force: :cascade do |t|
+    t.string "source_path", null: false
+    t.string "destination_path", null: false
+    t.string "redirect_type", default: "permanent", null: false
+    t.string "pattern_type", default: "exact", null: false
+    t.boolean "active", default: true
+    t.integer "priority", default: 1, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active", "priority"], name: "index_redirects_on_active_and_priority"
+    t.index ["source_path"], name: "index_redirects_on_source_path", unique: true
   end
 
   create_table "stock_prices", force: :cascade do |t|

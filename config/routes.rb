@@ -22,6 +22,12 @@ Rails.application.routes.draw do
   get "/community", to: redirect("https://link.maybe.co/discord", status: 301)
   get "/early-access", to: redirect("https://app.maybefinance.com/early-access", status: 301)
 
+  # Redirect for removed inside trading tracker
+  get "/tools/inside-trading-tracker(/*path)", to: redirect("/", status: 301)
+
+  get "pricing", to: "pages#pricing"
+  get "features/assistant/:category", to: "features#assistant", as: "assistant_category"
+  get "features/assistant/:category/content", to: "features#assistant_content", as: "assistant_content"
 
   get "pricing", to: "pages#pricing"
   get "features/assistant/:category", to: "features#assistant", as: "assistant_category"
@@ -31,6 +37,7 @@ Rails.application.routes.draw do
   resources :signups, only: [ :new, :create ]
   resources :articles, only: [ :index, :show ]
   resources :terms, only: [ :index, :show ], path: "financial-terms"
+  resources :faqs, only: [ :index, :show ], path: "financial-faqs"
   resources :tools, only: [ :index, :show ], param: :slug do
     member do
       # Exchange rate calculator routes
@@ -41,14 +48,6 @@ Rails.application.routes.draw do
           amount: /\d+(\.\d+)?/
         },
         action: :show
-
-      # Insider trading views
-      get ":filter",
-        action: :show,
-        constraints: {
-          filter: /top-owners|biggest-trades|top-officers/,
-          slug: "inside-trading-tracker"
-        }
 
       # Stock symbol route
       get ":symbol", action: :show, constraints: { symbol: /[A-Z]+/ }
@@ -64,42 +63,22 @@ Rails.application.routes.draw do
     end
   end
 
-  get "stocks/exchanges/:id", to: "stocks#exchanges", as: :stock_exchange
-  get "stocks/sectors/:id", to: "stocks#sectors", as: :stock_sector
-  get "stocks/industries/:id", to: "stocks#industries", as: :stock_industry
+  # Bank search routes
+  get "/bank-search", to: "bank_search#index", as: :bank_search
+  get "/api/bank-search", to: "bank_search#search", as: :bank_search_api
 
-  resources :stocks, only: [ :index ] do
-    collection do
-      get :all
-      get :exchanges
-      get :industries
-      get :sectors
-    end
-  end
+  # Specific route for stocks index with combobox param
+  get "/stocks", to: "stocks#index", constraints: lambda { |req| req.params[:combobox].present? }, as: :stocks_combobox
 
-  resources :stocks, only: [ :show ], param: :ticker, constraints: { ticker: /[^\/]+/ } do
-    scope module: :stocks do
-      resource :info, only: :show, controller: "info"
-      resource :statistics, only: :show
-      resource :news, only: :show
-      resource :chart, only: :show, controller: "chart"
-      resource :price_performance, only: :show, controller: "price_performance"
-      resource :similar_stocks, only: :show, controller: "similar_stocks"
-    end
-  end
-
-  resources :stocks do
-    member do
-      post "cache_page", as: :cache
-    end
-  end
+  # Redirect all other /stocks... paths
+  get "stocks(/*path)", to: redirect("/", status: 301)
 
   get "tos" => "pages#tos"
   get "terms", to: redirect("/tos", status: 301)
   get "privacy" => "pages#privacy"
 
   get "sitemap.xml", to: "pages#sitemap_index", defaults: { format: "xml" }
-  get "sitemap_:page.xml", to: "pages#sitemap", defaults: { format: "xml" }
+  get "sitemap_:page.xml", to: redirect("/sitemap.xml", status: 301)
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -111,4 +90,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   root "pages#index"
+
+  # Catch-all route for redirects (must be last)
+  get "*path", to: "redirects#catch_all", constraints: lambda { |req| !req.path.start_with?("/rails/") }
 end

@@ -4,15 +4,15 @@ class Avo::Resources::Term < Avo::BaseResource
   }
 
   self.includes = []
-  # self.search = {
-  #   query: -> { query.ransack(id_eq: params[:q], m: "or").result(distinct: false) }
-  # }
+  self.search = {
+    query: -> { query.ransack(name_cont: params[:q], title_cont: params[:q], content_cont: params[:q], slug_cont: params[:q], m: "or").result(distinct: false) }
+  }
 
   def fields
     field :id, as: :id
     field :name, as: :text
     field :title, as: :text
-    field :content, as: :markdown
+    field :content, as: :easy_mde
     field :slug, as: :text
     field :video_id, as: :text
     field :video_description, as: :textarea

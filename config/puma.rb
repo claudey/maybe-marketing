@@ -53,3 +53,32 @@ plugin :tmp_restart
 
 # Only use a pidfile when requested
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
+
+# Configure Logtail after worker fork to prevent thread inheritance issues
+if ENV["LOGTAIL_API_KEY"] && !ENV["LOGTAIL_API_KEY"].empty? && ENV["LOGTAIL_INGESTING_HOST"] && !ENV["LOGTAIL_INGESTING_HOST"].empty?
+  on_worker_boot do
+    puts "🔧 Worker #{Process.pid}: Initializing Logtail after fork"
+
+    begin
+      # Initialize Logtail in each worker process
+      logtail_logger = Logtail::Logger.create_default_logger(
+        ENV["LOGTAIL_API_KEY"],
+        ingesting_host: ENV["LOGTAIL_INGESTING_HOST"]
+      )
+
+      # Replace Rails logger with Logtail logger
+      Rails.logger = logtail_logger
+
+      puts "✅ Worker #{Process.pid}: Logtail configured successfully"
+    rescue => e
+      puts "❌ Worker #{Process.pid}: Failed to configure Logtail: #{e.message}"
+      puts "   Keeping standard Rails logger"
+    end
+  end
+
+  # Clean up Logtail connections when worker shuts down
+  on_worker_shutdown do
+    puts "🧹 Worker #{Process.pid}: Shutting down Logtail"
+    Rails.logger.close if Rails.logger.respond_to?(:close)
+  end
+end
