@@ -43,8 +43,8 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sans: ["Geist", ...defaultTheme.fontFamily.sans],
-        mono: ["Geist Mono", ...defaultTheme.fontFamily.mono],
+        sans: ["Geist", "sans-serif"],
+        mono: ["Geist Mono", "monospace"],
       },
       fontWeight: {
         medium: "450",
@@ -71,6 +71,6 @@ module.exports = {
     require('@tailwindcss/forms'),
     require('@tailwindcss/aspect-ratio'),
     require('@tailwindcss/typography'),
-    require('@tailwindcss/container-queries'),
+    require('@tailwindcss/container-queries')
   ]
 }
